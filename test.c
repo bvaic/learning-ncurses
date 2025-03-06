@@ -12,6 +12,7 @@ int main() {
 	getnstr(answer, 99);
 
 	printw("You said:\n%s", answer);
+	flash(); // flash the screen
 	refresh();
 
 	getch();
