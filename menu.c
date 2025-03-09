@@ -60,8 +60,24 @@ int main(void) {
 
 	echo();
 
-	// the value of menuitem can be used in a switch statement to determine what to do next
-
+	// the value of menuitem can be used in a switch statement to determine what to do next	
+	
 	endwin();
+
+	switch (menuitem) {
+		case 0:
+			printf("\nYou want to browse the internet.\n\n");
+			break;
+		case 1:
+			printf("\nYou want to read your E-Mail.\n\n");
+			break;
+		case 2:
+			printf("\nYou want to do some word processing.\n\n");
+			break;
+		case 3:
+			printf("\nYou want to shutdown.\n\n");
+			break;
+	}
+
 	return 0;
 }
