@@ -14,49 +14,141 @@
 #define TPOS_CENTER 1
 #define TPOS_RIGHT 2
 
+#define EDIT_LIMIT 
+
+// STATES (linked to global var: 
+#define INSERT 0
+
 #define waddstrctr(win, row, text) \
 	int wy, wx; \
 	getyx(win, wy, wx); \
 	mvwaddstr(win, row, (wx - strlen(text)) / 2, text);
 
+typedef struct TaskNode {
+	int task_id;
+	//int depth;
+	bool complete;
+	char text[300];
+
+	//struct TaskNode *subtask; // if implemented, this would lead to another linked list for the subtasks
+	struct TaskNode *prev;
+	struct TaskNode *next;
+} TaskNode;
+
+const char SELECTED_PREFIX[] = " --> ";
+const char TASK_BOX_NORMAL[] = "[ ]";
+const char TASK_BOX_COMPLETE[] = "[X]";
 const int HELP_LINES = 10;
 const int HELP_COLS = 26;
+const char state_def[][50] = {
+	"INSERT"
+};
 
+// GLOBALS
 WINDOW *help_win;
+char filename[400] = "untitled"; // may need increase buffer size
+TaskNode *selected_task;
 
+short state = INSERT;
+
+void draw_screen();
+void enter_pressed();
+void delch_on_taskline();
 void draw_win_outline(WINDOW *win, int rows, int cols, char *title, int tpos);
 void create_help_win();
+void open_help_win();
 void getyx_center_win(int rows, int cols, int *y, int *x);
+void wprintwctr(WINDOW *win, int row, char *fmt, ...);
 void err_exit(char *msg, ...);
 
 
 int main(int argc, char *argv[]) {
 	int ch;
+	bool loop;
 
 	setlocale(LC_ALL, "");
 
 	initscr();
+	noecho();
+	keypad(stdscr, TRUE);
 
 	create_help_win();
 
-	addstr("test");
+	draw_screen();	
+
 	refresh();
 
-	do {
+	loop = true;
+	while (loop) {
 		ch = getch();
-
 		switch (ch) {
+			case '\n':
+				enter_pressed();	
+				break;
+			case KEY_BACKSPACE:
+				delch_on_taskline();
+				break;
 			case '~':
-				wrefresh(help_win);
+				open_help_win();
+				break;
+			case 'q':
+				if (state != INSERT)
+					loop = false;
+				else
+					addch(ch);
+				break;
+			default:
+				addch(ch);
+				refresh();	
 				break;
 		}
-	} while (ch != 'q');
-	// wrefresh(help_win);
-
-	getch();
+	};
 
 	endwin();
 	return 0;
+}
+
+/*
+draws:
+1. title
+2. tasks
+3. state
+*/
+void draw_screen() {
+	// title
+	wprintwctr(stdscr, 0, "Minito - %s", filename);
+
+	// tasks
+	attrset(A_BOLD);
+	mvprintw(1, 0, "%s%s ", SELECTED_PREFIX, TASK_BOX_NORMAL);
+	
+	// state
+	mvprintw(LINES-1, 1, "%s", state_def[state]);
+	
+	// move back to first task
+	move(1, strlen(SELECTED_PREFIX) + strlen(TASK_BOX_NORMAL) + 1);
+}
+
+void enter_pressed() {
+	switch (state) {
+		case INSERT:
+			// create a task
+			break;
+	}
+}
+
+// Move first then delete, not the other way around
+void delch_on_taskline() {
+	int edit_limit = strlen(SELECTED_PREFIX) + strlen(TASK_BOX_NORMAL);
+	int y, curX, newX;
+	
+	getyx(stdscr, y, curX);
+	newX = curX - 1;
+	if (newX > edit_limit) {
+		move(y, newX);
+		delch();
+		refresh();
+	}
 }
 
 // Draws window outline with title, no refresh
@@ -112,16 +204,19 @@ void create_help_win() {
 
 	help_win = newwin(HELP_LINES, HELP_COLS, start_y, start_x);
 	draw_win_outline(help_win, HELP_LINES, HELP_COLS, "Help", TPOS_CENTER);
-	waddstrctr(help_win, HELP_LINES - 1, " ENTER to return ");
+	wprintwctr(help_win, HELP_LINES - 1, " ENTER to return ");
 }
 
 // Waits for user to press ENTER, then closes
 void open_help_win() {
 	int ch;
+	touchwin(help_win);
 	wrefresh(help_win);
 	do { ch = getch(); } while (ch != '\n');
 
 	// close
+	touchwin(stdscr);
+	refresh();	
 }
 
 // Calculates the (y, x) point of the UL corner of a window to be drawn at the center of the screen 
@@ -132,13 +227,26 @@ void getyx_center_win(int rows, int cols, int *y, int *x) {
 	*x = start_x;	
 }
 
+// Prints at center of given row of given window
+void wprintwctr(WINDOW *win, int row, char *fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+
+	char buffer[512];
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
+
+	int wx = getmaxx(win);
+	mvwaddstr(win, row, (wx - strlen(fmt)) / 2, buffer);
+
+	va_end(args);
+}
+
 // Takes formated msg
 void err_exit(char *msg, ...) {
 	va_list args;
 	va_start(args, msg);
 
 	char buffer[512];
-
 	vsnprintf(buffer, sizeof(buffer), msg, args);
 
 	endwin();
