@@ -1,21 +1,17 @@
 #include <ncurses.h>
 
+#define LEFT 	0
+#define CENTER 	1
+#define RIGHT 	2
+
 int main() {
+	slk_init(0);
 	initscr();
 
-	addstr("This is a test message\n");
-	addstr("Enter something: ");	
-
-	refresh();
-	
-	char answer[100];
-	getnstr(answer, 99);
-
-	printw("You said:\n%s", answer);
-	flash(); // flash the screen
-	refresh();
-
+	slk_set(1, "Help [H]", CENTER);
+	slk_refresh();
 	getch();
+
 	endwin();
 	return 0;
 }
