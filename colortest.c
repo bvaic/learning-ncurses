@@ -41,9 +41,9 @@ int main(void) {
 
 	// custom colors with r,g,b
 	if (!(can_change_color()))
-		addstr("\nTerminal cannot define colors.\n");
+		addstr("\nYour terminal cannot define colors.\n");
 	else {
-		addstr("\nTerminal able to define colors!\n");
+		addstr("\nYour terminal is able to define colors!\n");
 
 		short r = 956; // 244
 		short g = 466; // 119
@@ -51,7 +51,7 @@ int main(void) {
 		init_color(COLOR_ORANGE, r, g, b);
 		init_pair(2, COLOR_BLACK, COLOR_ORANGE);
 		attrset(COLOR_PAIR(2));
-		addstr("This is a custom defined orange.\n");
+		printw("This is a custom defined orange (%d, %d, %d).\n", r, g, b);
 	}
 
 	refresh();
