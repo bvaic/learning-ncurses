@@ -5,17 +5,18 @@ const int LINE_LIMIT = 10;
 int main(int argc, char *argv[]) {
 	FILE *f;	
 	char buffer[255];
-
-	if (f == NULL) {
-		printf("File not found\n");
-		return 1;
-	}	
+	
 	if (argc == 1) {
 		printf("Filename required\n");
 		return 1;
 	}
 
 	f = fopen(argv[1], "r"); // potential vuln? user defined filename?
+                             
+    if (f == NULL) {
+		printf("File not found\n");
+		return 1;
+	}
 
 	initscr();
 	start_color();
